@@ -27,12 +27,21 @@ jobs:
           TAILSCALE_AUTH_KEY: ${{ secrets.TAILSCALE_AUTH_KEY }}
         run: |
           $env:Path += ";C:\Program Files\Tailscale"
-          tailscale up --authkey=$env:TAILSCALE_AUTH_KEY --hostname=gh-actions-windows-2022 --ssh
+          tailscale up --authkey=$env:TAILSCALE_AUTH_KEY --hostname=gh-actions-windows-2022
+          
+      - name: Verify Tailscale Connection
+        run: |
+          $env:Path += ";C:\Program Files\Tailscale"
+          tailscale status
           
       - name: Enable Remote Desktop
         run: |
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          
+      - name: Configure RDP Port
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "PortNumber" -Value 3389
           
       - name: Start Desktop Environment
         run: |
