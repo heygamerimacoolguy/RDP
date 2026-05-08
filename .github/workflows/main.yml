@@ -5,10 +5,12 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   desktop:
     runs-on: windows-2022
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
       
@@ -16,16 +18,16 @@ jobs:
         run: |
           choco install tailscale -y
           
-      - name: Wait for Tailscale Installation
+      - name: Wait for Installation
         run: |
-          Start-Sleep -Seconds 15
+          Start-Sleep -Seconds 20
           
       - name: Connect to Tailscale
         env:
           TAILSCALE_AUTH_KEY: ${{ secrets.TAILSCALE_AUTH_KEY }}
         run: |
           $env:Path += ";C:\Program Files\Tailscale"
-          tailscale up --authkey=$env:TAILSCALE_AUTH_KEY --hostname=gh-actions-windows-2022
+          tailscale up --authkey=$env:TAILSCALE_AUTH_KEY --hostname=gh-actions-windows-2022 --ssh
           
       - name: Enable Remote Desktop
         run: |
@@ -39,4 +41,4 @@ jobs:
           
       - name: Keep Runner Active
         run: |
-          Start-Sleep -Seconds 3600
+          Start-Sleep -Seconds 21600
