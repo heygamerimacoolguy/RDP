@@ -15,17 +15,17 @@ jobs:
       - name: Install Tailscale
         run: |
           choco install tailscale -y
-          refreshenv
           
       - name: Wait for Tailscale Installation
         run: |
-          Start-Sleep -Seconds 10
+          Start-Sleep -Seconds 15
           
       - name: Connect to Tailscale
         env:
           TAILSCALE_AUTH_KEY: ${{ secrets.TAILSCALE_AUTH_KEY }}
         run: |
-          & "C:\Program Files\Tailscale\tailscale.exe" up --authkey=$env:TAILSCALE_AUTH_KEY --hostname=gh-actions-windows-2022
+          $env:Path += ";C:\Program Files\Tailscale"
+          tailscale up --authkey=$env:TAILSCALE_AUTH_KEY --hostname=gh-actions-windows-2022
           
       - name: Enable Remote Desktop
         run: |
