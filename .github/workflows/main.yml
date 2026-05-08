@@ -1,39 +1,37 @@
-name: Ubuntu Desktop RDP
-on: 
-  workflow_dispatch:
+name: Windows Server 2022 Full GUI with Tailscale
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  desktop:
+    runs-on: windows-2022
     steps:
+      - uses: actions/checkout@v4
+      
       - name: Install Tailscale
         run: |
-          curl -fsSL https://tailscale.com/install.sh | sh
-          sudo tailscaled --tun=userspace-networking &
-          sleep 5
-
+          choco install tailscale -y
+          
       - name: Connect to Tailscale
         env:
           TAILSCALE_AUTH_KEY: ${{ secrets.TAILSCALE_AUTH_KEY }}
         run: |
-          # Replace 'rdp-node' with whatever name you want
-          sudo tailscale up --authkey=$TAILSCALE_AUTH_KEY --hostname=ubuntu-desktop --accept-routes
-          echo "Your Tailscale IP is: $(tailscale ip -4)"
-
-      - name: Install Ubuntu Desktop (GNOME)
-        run: |
-          export DEBIAN_FRONTEND=noninteractive
-          sudo apt update
-          # ubuntu-desktop-minimal is faster to install than the full version
-          sudo apt install -y ubuntu-desktop-minimal xrdp
+          tailscale up --authkey=$env:TAILSCALE_AUTH_KEY --hostname=gh-actions-windows-2022
           
-      - name: Setup RDP User
+      - name: Enable Remote Desktop
         run: |
-          # This sets the password for the 'runner' user to 'P@ssword123'
-          # CHANGE THIS if you want a different password
-          echo "runner:P@ssword123" | sudo chpasswd
-          sudo adduser xrdp ssl-cert
-          sudo systemctl restart xrdp
-
-      - name: Keep Alive (6 Hours)
-        run: sleep 21600
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          
+      - name: Start Desktop Environment
+        run: |
+          Start-Process explorer.exe
+          Start-Process "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+          
+      - name: Keep Runner Active
+        run: |
+          Start-Sleep -Seconds 3600
